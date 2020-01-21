@@ -1,12 +1,13 @@
 (function(module) {
 	'use strict';
 
-	var user = require.main.require('./src/user/index'),
-		db = require.main.require('./src/database/index'),
+	var user = require.main.require('./src/user'),
+		db = require.main.require('./src/database'),
 		meta = require.main.require('./src/meta'),
 		passport = require.main.require('passport'),
 		passportSteam = require('passport-steam').Strategy,
-		utils = require.main.require('./src/utils'),
+		nconf = require.main.require('nconf'),
+		utils = require('../../public/src/utils'),
 		authenticationController = require.main.require('./src/controllers/authentication'),
 		winston = require.main.require('winston'),
 		async = require('async');
@@ -40,7 +41,7 @@
 
 		db.setObjectField('steam-sso:uid-link', steamid, uid);
 		db.setObjectField('steam-sso:steamid-link', uid, steamid);
-	};
+	}
 
 	Steam.getStrategy = function (strategies, callback) {
 		meta.settings.get('sso-steam', function(err, settings) {
@@ -48,8 +49,8 @@
 				passport.use(
 					new passportSteam(
 					{
-						returnURL: module.parent.require('nconf').get('url') + '/auth/steam/callback',
-						realm: module.parent.require('nconf').get('url'),
+						returnURL: nconf.get('url') + '/auth/steam/callback',
+						realm: nconf.get('url'),
 						apiKey: settings['key'],
 						passReqToCallback: true
 					},
@@ -59,12 +60,12 @@
 							Steam.linkAccount(req.user.uid, profile.id);
 							return done(null, req.user);
 						}
-
+						
 						Steam.login(profile.id, profile.displayName, profile._json.avatarfull, function(err, user) {
 							if (err) {
 								return done(new Error(err));
 							}
-
+							
 							authenticationController.onSuccessfulLogin(req, user.uid);
 							done(null, user);
 						});
@@ -75,6 +76,7 @@
 					name: 'steam',
 					url: '/auth/steam',
 					callbackURL: '/auth/steam/callback',
+					skipCSRFCheck: true,
 					icon: constants.admin.icon,
 					scope: 'user:username'
 				});
@@ -103,7 +105,7 @@
 			} else {
 				data.associations.push({
 					associated: false,
-					url: module.parent.require('nconf').get('url') + '/auth/steam',
+					url: require.main.require('nconf').get('url') + '/auth/steam',
 					name: constants.name,
 					icon: constants.admin.icon
 				});
@@ -177,7 +179,7 @@
 				callback(null, uid);
 			});
 		});
-	};
+	}
 
 	Steam.addMenuItem = function(custom_header, callback) {
 		custom_header.authentication.push({
@@ -198,7 +200,7 @@
 			}
 			callback(null, data);
 		})
-	};
+	}
 
 	module.exports = Steam;
 }(module));
