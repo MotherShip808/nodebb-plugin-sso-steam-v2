@@ -201,6 +201,15 @@
 			callback(null, data);
 		})
 	}
+	Steam.addProfileUserData = function (data, callback) {
+		Steam.getSteamidByUid(data.uid, function (err, steamid) {
+			if ((err == null) && (steamid !== null)) {
+				data['steam-sso:steamid'] = steamid;
+				data['steam-sso:profile'] = profileurl(steamid);
+			}
+			callback(null, data);
+		})
+	}
 
 	module.exports = Steam;
 }(module));
